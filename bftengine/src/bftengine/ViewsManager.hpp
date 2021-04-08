@@ -51,12 +51,10 @@ class ViewsManager {
   };
 
   ViewsManager(const ReplicasInfo *const r,
-               SigManager *sigmgr,
                std::shared_ptr<IThresholdVerifier> preparedCertificateVerifier);  // TODO(GG): move to protected
   ~ViewsManager();
 
   static ViewsManager *createOutsideView(const ReplicasInfo *const r,
-                                         SigManager *sigMgr,
                                          std::shared_ptr<IThresholdVerifier> preparedCertificateVerifier,
                                          ViewNum lastActiveView,
                                          SeqNum lastStable,
@@ -66,11 +64,9 @@ class ViewsManager {
                                          std::vector<PrevViewInfo> &elementsOfPrevView);
 
   static ViewsManager *createInsideViewZero(const ReplicasInfo *const r,
-                                            SigManager *sigMgr,
                                             std::shared_ptr<IThresholdVerifier> preparedCertificateVerifier);
 
   static ViewsManager *createInsideView(const ReplicasInfo *const r,
-                                        SigManager *sigMgr,
                                         std::shared_ptr<IThresholdVerifier> preparedCertificateVerifier,
                                         ViewNum view,
                                         SeqNum stableLowerBound,
@@ -156,7 +152,6 @@ class ViewsManager {
   ///////////////////////////////////////////////////////////////////////////
 
   const ReplicasInfo *const replicasInfo;
-  static SigManager *sigManager_;
 
   const uint16_t N;  // number of replicas
   const uint16_t F;  // f

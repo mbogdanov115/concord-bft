@@ -53,23 +53,7 @@ namespace impl {
 // most code of ReplicaLoader is encapsulated in this file
 namespace {
 
-ReplicaLoader::ErrorCode loadConfig(shared_ptr<PersistentStorage> &p, LoadedReplicaData &ld) {
-  ConcordAssert(p != nullptr);
-
-  std::set<SigManager::PublicKeyDesc> replicasSigPublicKeys;
-
-  for (const auto &e : ld.repConfig.publicKeysOfReplicas) {
-    SigManager::PublicKeyDesc keyDesc = {e.first, e.second};
-    replicasSigPublicKeys.insert(keyDesc);
-  }
-
-  uint16_t numOfReplicas = (uint16_t)(3 * ld.repConfig.fVal + 2 * ld.repConfig.cVal + 1);
-
-  ld.sigManager = new SigManager(ld.repConfig.replicaId,
-                                 numOfReplicas + ld.repConfig.numOfClientProxies + ld.repConfig.numOfExternalClients,
-                                 ld.repConfig.replicaPrivateKey,
-                                 replicasSigPublicKeys);
-
+ReplicaLoader::ErrorCode loadConfig(LoadedReplicaData &ld) {
   ld.repsInfo = new ReplicasInfo(ld.repConfig, dynamicCollectorForPartialProofs, dynamicCollectorForExecutionProofs);
 
   Cryptosystem *cryptoSys = new Cryptosystem(ld.repConfig.thresholdSystemType_,
@@ -118,8 +102,8 @@ ReplicaLoader::ErrorCode loadViewInfo(shared_ptr<PersistentStorage> &p, LoadedRe
 
   ViewsManager *viewsManager = nullptr;
   if (!hasDescLastExitFromView && !hasDescOfLastNewView) {
-    viewsManager = ViewsManager::createInsideViewZero(
-        ld.repsInfo, ld.sigManager, CryptoManager::instance().thresholdVerifierForSlowPathCommit());
+    viewsManager =
+        ViewsManager::createInsideViewZero(ld.repsInfo, CryptoManager::instance().thresholdVerifierForSlowPathCommit());
 
     ConcordAssert(viewsManager->latestActiveView() == 0);
     ConcordAssert(viewsManager->viewIsActive(0));
@@ -129,7 +113,6 @@ ReplicaLoader::ErrorCode loadViewInfo(shared_ptr<PersistentStorage> &p, LoadedRe
     Verify((descriptorOfLastExitFromView.view == 0), InconsistentErr);
 
     viewsManager = ViewsManager::createOutsideView(ld.repsInfo,
-                                                   ld.sigManager,
                                                    CryptoManager::instance().thresholdVerifierForSlowPathCommit(),
                                                    descriptorOfLastExitFromView.view,
                                                    descriptorOfLastExitFromView.lastStable,
@@ -147,7 +130,6 @@ ReplicaLoader::ErrorCode loadViewInfo(shared_ptr<PersistentStorage> &p, LoadedRe
     Verify((descriptorOfLastExitFromView.view >= 1), InconsistentErr);
 
     viewsManager = ViewsManager::createOutsideView(ld.repsInfo,
-                                                   ld.sigManager,
                                                    CryptoManager::instance().thresholdVerifierForSlowPathCommit(),
                                                    descriptorOfLastExitFromView.view,
                                                    descriptorOfLastExitFromView.lastStable,
@@ -166,7 +148,6 @@ ReplicaLoader::ErrorCode loadViewInfo(shared_ptr<PersistentStorage> &p, LoadedRe
     Verify((descriptorOfLastNewView.view >= 1), InconsistentErr);
 
     viewsManager = ViewsManager::createInsideView(ld.repsInfo,
-                                                  ld.sigManager,
                                                   CryptoManager::instance().thresholdVerifierForSlowPathCommit(),
                                                   descriptorOfLastNewView.view,
                                                   descriptorOfLastNewView.stableLowerBoundWhenEnteredToView,
@@ -192,7 +173,7 @@ ReplicaLoader::ErrorCode loadViewInfo(shared_ptr<PersistentStorage> &p, LoadedRe
 ReplicaLoader::ErrorCode loadReplicaData(shared_ptr<PersistentStorage> p, LoadedReplicaData &ld) {
   ConcordAssert(p != nullptr);
 
-  ReplicaLoader::ErrorCode stat = loadConfig(p, ld);
+  ReplicaLoader::ErrorCode stat = loadConfig(ld);
 
   Verify((stat == Succ), stat);
 
@@ -326,7 +307,6 @@ void freeReplicaData(LoadedReplicaData &ld) {
 
   delete ld.viewsManager;
   delete ld.repsInfo;
-  delete ld.sigManager;
 }
 }  // namespace
 

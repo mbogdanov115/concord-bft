@@ -22,8 +22,7 @@ typedef enum { STATUS_GOOD, STATUS_REJECT } ReplyStatus;
 
 class PreProcessReplyMsg : public MessageBase {
  public:
-  PreProcessReplyMsg(bftEngine::impl::SigManagerSharedPtr sigManager,
-                     preprocessor::PreProcessorRecorder* histograms,
+  PreProcessReplyMsg(preprocessor::PreProcessorRecorder* histograms,
                      NodeIdType senderId,
                      uint16_t clientId,
                      uint16_t reqOffsetInBatch,
@@ -46,7 +45,6 @@ class PreProcessReplyMsg : public MessageBase {
   const uint8_t* resultsHash() const { return msgBody()->resultsHash; }
   const uint8_t status() const { return msgBody()->status; }
   std::string getCid() const;
-  void setSigManager(bftEngine::impl::SigManagerSharedPtr sigManager) { sigManager_ = sigManager; }
   void setPreProcessorHistograms(preprocessor::PreProcessorRecorder* histograms) {
     preProcessorHistograms_ = histograms;
   }
@@ -77,10 +75,8 @@ class PreProcessReplyMsg : public MessageBase {
       NodeIdType senderId, uint16_t clientId, uint16_t reqOffsetInBatch, ReqId reqSeqNum, uint64_t reqRetryId);
   Header* msgBody() const { return ((Header*)msgBody_); }
 
- private:
   static uint16_t maxReplyMsgSize_;
 
-  bftEngine::impl::SigManagerSharedPtr sigManager_;
   preprocessor::PreProcessorRecorder* preProcessorHistograms_ = nullptr;
 };
 
